@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  redis:
+    container_name: redis_server
+    image: redis:5.0-alpine
+    ports:
+      - 6379:6379
+    restart: unless-stopped
+
+  api-server:
+    container_name: api-server
+    restart: always
+    build: ./
+    ports:
+      - 8800:8800
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+    depends_on:
+      - redis
