@@ -6,7 +6,7 @@ from fastapi_jwt_auth import AuthJWT
 from starlette_graphene3 import GraphQLApp, make_graphiql_handler, make_playground_handler
 from starlette.datastructures import URL
 from user.schema import Query, Mutation
-from core.database import create_table, get_session
+from core.database import create_table
 from sqlalchemy.ext.asyncio import AsyncSession
 from asyncio_executor import AsyncioExecutor
 # router = APIRouter()
@@ -15,8 +15,8 @@ app.on_event("startup")(create_table)
 
 graphql_app = graphene.Schema(query=Query, mutation=Mutation)
 
-# app.add_route("/graphql", GraphQLApp(schema=graphql_app, on_get=make_playground_handler()))
-
+app.add_route("/graphql", GraphQLApp(schema=graphql_app, on_get=make_playground_handler()))
+app.add_route("/", GraphQLApp(schema=graphql_app))
 # @router.get('/graphql')
 # async def graphiql(request: Request):
 #     request._url = URL('/graphql')
@@ -33,14 +33,14 @@ graphql_app = graphene.Schema(query=Query, mutation=Mutation)
 #     request._url = URL("/graphql")
 #     return await graphql.render_playground(request=request)
 
-@app.post("/graphql")
-async def graphql_post(request: Request, session: AsyncSession = Depends(get_session)):
-    # async for session in get_session():
-    #     session = session
-    request.state.session = session
-    g_app = GraphQLApp(schema=graphql_app)
-    # g_app.on_get(make_graphiql_handler())
-    return await g_app
+# @app.post("/graphql")
+# async def graphql_post(request: Request, session: AsyncSession = Depends(get_session)):
+#     # async for session in get_session():
+#     #     session = session
+#     request.state.session = session
+#     g_app = GraphQLApp(schema=graphql_app)
+#     # g_app.on_get(make_graphiql_handler())
+#     return await g_app
 
 @app.get("/")
 async def health_check():

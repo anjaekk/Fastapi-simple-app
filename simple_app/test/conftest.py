@@ -83,7 +83,7 @@ from dotenv import load_dotenv
 from main import graphql_app
 env = load_dotenv()
 url = getenv('WRITE_DB_URL')
-
+from core.database import async_session
 
 import aiohttp
 from aiographql.client import GraphQLClient
@@ -91,17 +91,23 @@ from aiographql.client import GraphQLClient
 from aiographql.client.helpers import aiohttp_client_session
 
 
+db = async_session()
+
+@pytest.fixture(scope="module")
+def graphql_client():
+    return Client(graphql_app)
 
 
-@pytest.fixture(autouse=True)
-async def get_session():
-    engine_for_test = create_async_engine(url)
-    test_async_session = sessionmaker(engine_for_test, class_=AsyncSession)
-    try:
-        async with test_async_session() as test_async_session:
-            yield test_async_session
-    finally:
-        await test_async_session.close()
+
+# @pytest.fixture(autouse=True)
+# async def get_session():
+#     engine_for_test = create_async_engine(url)
+#     test_async_session = sessionmaker(engine_for_test, class_=AsyncSession)
+#     try:
+#         async with test_async_session() as test_async_session:
+#             yield test_async_session
+#     finally:
+#         await test_async_session.close()
 
 
 
@@ -116,9 +122,7 @@ async def get_session():
 #     return client
     
 
-@pytest.fixture(scope="module")
-def graphql_client():
-    return Client(graphql_app)
+
 
 # @pytest.fixture(scope='session')
 # def event_loop():
@@ -127,26 +131,26 @@ def graphql_client():
 #     yield loop
 #     loop.close()
 
-@pytest.fixture(scope="session")
-async def init_database(session):
-    async with session() as session:
-        await metadata.create_all
+# @pytest.fixture(scope="session")
+# async def init_database(session):
+#     async with session() as session:
+#         await metadata.create_all
 
 
 # async def init_test_db():
 #     async with engine.begin() as conn:
 #         await conn.run_sync(Base.metadata.create_all)
 
-# @pytest.fixture(scope='function')
-# async def user(session):
-#     user = User(
-#         {
-#             "email":"testeamil@email.com",
-#             "password":"testpassword",
-#             "name":"test"
-#         }
-#     )
-#     session.add(user)
-#     await session.commit()
-#     await session.refresh(user)
-#     return user
+@pytest.fixture(scope='function')
+async def user(session):
+    user = User(
+        {
+            "email":"testeamil@email.com",
+            "password":"testpassword",
+            "name":"test"
+        }
+    )
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return user

@@ -6,13 +6,15 @@ from sqlalchemy.sql import select
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import async_session
-from .serializers import User, UserCreateInput, UserCreate, UserList
+from .serializers import User, UserCreateInput, UserCreateType, UserList
+from core import session
 
-db = async_session()
+session = async_session()
 
 PW_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class CreateUser(graphene.Mutation):
+    user = graphene.Field(lambda: UserCreateType)
     class Arguments:
         input_data = UserCreateInput(
             description='Input data for user creation', required=True
@@ -20,14 +22,10 @@ class CreateUser(graphene.Mutation):
 
     class Meta:
         model = User
-        description = 'Create a new user.'
-        
-    Output = UserCreate
-    
-    
+        description = 'Create a new user.' 
 
     @staticmethod
-    async def mutate(root, info, input_data, session:AsyncSession):
+    async def mutate(root, info, input_data):
         # async for session in get_session():
         #     session = session
 
@@ -41,12 +39,17 @@ class CreateUser(graphene.Mutation):
             raise Exception("Email already exists.")
 
         input_data['password'] = PW_CONTEXT.hash(input_data['password'])
-        instance = User(**input_data)
-        session.add(instance)
-
+        # instance = User(**input_data)
+        user=User()
+        user.email = input_data["email"]
+        user.password = input_data["password"]
+        user.name = input_data["name"] 
+        session.add(user)
         await session.commit()
-        await session.refresh(instance)
-        return instance
+        await session.refresh(user)
+        print(user)
+        print("***************")
+        return CreateUser(user=user)
 
 
 class Mutation(graphene.ObjectType):

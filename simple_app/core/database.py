@@ -36,10 +36,10 @@ async_session = sessionmaker(
 #     async with async_session() as session:
 #         yield session0
 
-# async def create_table() -> None:
-#     async with engine_for_write.begin() as conn:
-#         # await conn.run_sync(SQLModel.metadata.drop_all)
-#         await conn.run_sync(SQLModel.metadata.create_all)
+async def create_table() -> None:
+    async with engine_for_write.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.drop_all)
+        await conn.run_sync(SQLModel.metadata.create_all)
 
 # async def get_session() -> AsyncSession:
 #     async_session = sessionmaker(
@@ -51,12 +51,3 @@ async_session = sessionmaker(
 #     finally:
 #         await session.close()
 
-
-
-
-
-
-async def init_models():
-    async with engine_for_write.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
