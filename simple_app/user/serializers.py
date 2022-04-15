@@ -22,7 +22,7 @@ class User(SQLModel, table=True):
 class UserCreateInput(PydanticInputObjectType):
     class Meta:
         model = User
-        exclude_fields = ('id', 'created', 'is_active')
+        exclude_fields = ('created', 'is_active')
 
 
 class UserCreate(PydanticObjectType):

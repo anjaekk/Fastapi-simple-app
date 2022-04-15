@@ -1,29 +1,49 @@
 import graphene
+import asyncio
+from fastapi import Depends
 from graphene import relay
-
+from sqlalchemy.sql import select
+from passlib.context import CryptContext
+from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import async_session
 from .serializers import User, UserCreateInput, UserCreate, UserList
-from .models import User as user_model
 
+db = async_session()
+
+PW_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class CreateUser(graphene.Mutation):
     class Arguments:
         input_data = UserCreateInput(
-            description="Input data for user creation", required=True
+            description='Input data for user creation', required=True
         )
 
     class Meta:
-        model = user_model
-        description = "Create a new user."
+        model = User
+        description = 'Create a new user.'
         
     Output = UserCreate
+    
+    
 
     @staticmethod
-    async def mutate(self, info, input_data):
-        instance = User(**input_data)
-        session = async_session()
+    async def mutate(root, info, input_data, session:AsyncSession):
+        # async for session in get_session():
+        #     session = session
 
+        exist_email = (
+            await session.execute(
+                select(User).where(User.email == input_data['email'])
+            )
+        ).scalars().first()
+
+        if exist_email is not None:
+            raise Exception("Email already exists.")
+
+        input_data['password'] = PW_CONTEXT.hash(input_data['password'])
+        instance = User(**input_data)
         session.add(instance)
+
         await session.commit()
         await session.refresh(instance)
         return instance
@@ -39,4 +59,4 @@ class Query(graphene.ObjectType):
 
     @staticmethod
     def resolve_user_list(root, info):
-        return UserList.all()
+        return select(UserList).all()
