@@ -1,4 +1,3 @@
-from typing_extensions import Required
 import graphene
 from datetime import datetime
 from pydantic import EmailStr

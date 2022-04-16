@@ -18,4 +18,7 @@ async def test_create_user(graphql_client):
     }
     """
     result = graphql_client.execute(query)
+    print(result)
+    print("*************")
+    assert result['data']['createUser']['name'] == "test"
     assert 'errors' not in result
