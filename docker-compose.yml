@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  api-btmt:
+    container_name: api-btmt
+    restart: always
+    build:
+      context: ./simple_app
+      dockerfile: ./Dockerfile
+    ports:
+      - 8800:8800
+    env_file:
+      - .env
+    volumes:
+      - ./simple_app:/app
+    depends_on:
+      - testdb
+  
+  testdb:
+    container_name: testdb
+    image: postgres:13-alpine
+    ports:
+      - "55332:5432"
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=btmttest
+      - POSTGRES_PASSWORD=btmttest

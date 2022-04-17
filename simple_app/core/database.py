@@ -28,6 +28,13 @@ async_session = sessionmaker(
     class_=AsyncSession, sync_session_class=RoutingSession, expire_on_commit=False
 )
 
+async def get_session():
+    sess = async_session
+    try:
+        yield sess
+    finally:
+        await sess.close()
+
 async def create_table():
     async with engines["writer"].begin() as conn:
         await conn.run_sync(SQLModel.metadata.drop_all)
