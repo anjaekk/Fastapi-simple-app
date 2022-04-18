@@ -1,25 +1,15 @@
-import graphql
-import pytest
-from aiographql.client import GraphQLRequest
-from user.serializers import UserAccount
-import json
-from graphene.test import Client
-from user.serializers import UserAccount
-from main import graphql_app
 from httpx import AsyncClient
-from . import test_env
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.session import close_all_sessions
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from asyncio_executor import AsyncioExecutor
+from sqlalchemy.ext.asyncio import AsyncSession
+from user.auth import create_access_token
+import pytest
 
 
-async def test_create_user(async_client: AsyncClient, get_session: AsyncSession):
-    query = """
+async def test_create_user(async_client: AsyncClient):
+    query = """""""""
         mutation createUser{
             createUser(inputData: { 
-                email: "sssass@test.com", 
-                password: "123456",
+                email: "testeamil@email.com", 
+                password: "testpassword",
                 name: "test"
             }) {
                 user{
@@ -29,17 +19,15 @@ async def test_create_user(async_client: AsyncClient, get_session: AsyncSession)
         }
     }
     """
-
-    res = await async_client.post("/test",json={"query": query})
-    assert res.status_code == 200
+    res = await async_client.post('/graphql',json={'query': query})
     result = res.json()
     print(result)
-    print("******")
-    assert result['data']['createUser']['user']['name'] == "test"
+    print("************")
+    assert result['data']['createUser']['user']['name'] == 'test'
 
 
-async def test_create_token(async_client: AsyncClient, test_db_session: AsyncSession):
-    query = """
+async def test_create_token(async_client: AsyncClient):
+    query = """""""""
     mutation tokenCreate {
         createToken(  
             email: "testeamil@email.com", 
@@ -52,37 +40,30 @@ async def test_create_token(async_client: AsyncClient, test_db_session: AsyncSes
         }
     }  
     """
-    res = await async_client.post("/graphql",json={"query": query})
-    assert res.status_code == 200
+    res = await async_client.post('/graphql',json={'query': query})
     result = res.json()
-    assert result['data']['createToken']['accessToken'] ==  "aa"
-    assert 'errors' not in result
+    fake_token = create_access_token(1)
+    assert result['data']['createToken']['accessToken'] == fake_token
 
 
-@pytest.mark.anyio
-async def test_user_list(graphql_client):
-    query = """
-        query userList {
-    userList {
-        name
-        email
-    }
-    }
+async def test_create_token_invalid_account(async_client: AsyncClient):
+    query = """""""""
+    mutation tokenCreate {
+        createToken(  
+            email: "testeamil@email.com", 
+            password: "wrongpassowrd",
+            ) {
+            accessToken
+                user {
+                email
+            }
+        }
+    }  
     """
-    result = graphql_client.execute(query)
+    res = await async_client.post('/graphql',json={'query': query})
+    result = res.json()
     print(result)
-    print("*************")
-    assert 'errors' not in result
-
-
-
-
-
-from sqlalchemy.sql import select
-@pytest.mark.asyncio
-async def test_one(get_session):
-    session = get_session
-    user = UserAccount(name="foo", email="tt@tt.com", password="rree")
-    session.add(user)
-    await session.commit()
-    assert len((await session.execute(select(UserAccount))).scalars().all()) == 1
+    print("**********")
+    fake_token = create_access_token(1)
+    assert result['data']['createToken'] is None
+    assert result['errors'][0]['message'] == 'Wrong password.'

@@ -4,7 +4,6 @@ from pydantic import EmailStr
 from graphene import relay
 from graphene_pydantic import PydanticInputObjectType, PydanticObjectType
 from sqlmodel import Field, SQLModel
-from typing import Optional
 
 
 class UserAccount(SQLModel, table=True):

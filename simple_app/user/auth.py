@@ -2,7 +2,6 @@ from os import getenv
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from fastapi.security import HTTPAuthorizationCredentials
 
 env = load_dotenv()
 
@@ -12,7 +11,7 @@ ALGORITHM = getenv('ALGORITHM')
 ACCESS_TOKEN_EXPIRE = getenv('ACCESS_TOKEN_EXPIRE_MINUTES')
 
 def create_access_token(user_id):
-    payload = {"id": user_id}
+    payload = {'id': user_id}
     expire = datetime.utcnow() + timedelta(minutes=int(ACCESS_TOKEN_EXPIRE))
-    payload["exp"] = expire
+    payload['exp'] = expire
     return jwt.encode(payload, JWT_SECRET, algorithm=ALGORITHM)
