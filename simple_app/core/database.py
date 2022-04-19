@@ -10,7 +10,7 @@ env = load_dotenv()
 db_for_write = getenv('WRITE_DB_URL')
 db_for_read = getenv('READ_DB_URL')
 db_for_test = getenv('TEST_DB_URL')
-
+test = getenv('TEST')
 
 engines = {
     'write': create_async_engine(db_for_write),
@@ -20,10 +20,14 @@ engines = {
 
 class RoutingSession(Session):
     def get_bind(self, mapper=None, clause=None, **kwargs):
-        if self._flushing or isinstance(clause, (Update, Delete, Insert)):
-            return engines['write'].sync_engine
+        print(test)
+        if test == False:
+            if self._flushing or isinstance(clause, (Update, Delete, Insert)):
+                return engines['write'].sync_engine
+            else:
+                return engines['read'].sync_engine
         else:
-            return engines['read'].sync_engine
+           return engines['test'].sync_engine
 
 
 async def get_session() -> AsyncSession:
@@ -47,3 +51,8 @@ async def create_table():
 async def connection_dispose():
     for engine in engines.values():
         await engine.dispose()
+
+async def remove(self):
+    if self.registry.has(): 
+        await self.registry().close() 
+    self.registry.clear()

@@ -1,14 +1,15 @@
 import graphene
 from sqlalchemy.sql import select
 from passlib.context import CryptContext
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_session
 from .serializers import UserAccount, CreateUserInput, UserType
 from .auth import create_access_token
 
-
 PW_CONTEXT = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
+session = get_session()
 
 class CreateUser(graphene.Mutation):
     user = graphene.Field(UserType, description='A user instance.')
@@ -37,7 +38,9 @@ class CreateUser(graphene.Mutation):
         input_data['password'] = PW_CONTEXT.hash(input_data['password'])
         user=UserAccount(**input_data)
         session.add(user)
+        print("커밋전")
         await session.commit()
+        print("커밋후")
         return CreateUser(user=user)
 
 
