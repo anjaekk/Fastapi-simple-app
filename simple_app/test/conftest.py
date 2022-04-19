@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_utils import database_exists, create_database
 from httpx import AsyncClient
+
 from core.database import get_session
 from main import app, router
 from user.serializers import UserAccount
@@ -36,15 +37,17 @@ async def connection(test_engine):
         await conn.run_sync(SQLModel.metadata.create_all)
 
 
-@pytest.fixture(scope="function")
+
 async def test_get_session(connection):
     async_session = AsyncSession(bind=connection)
-    
     async with async_session as session:
         yield session
     app.dependency_overrides[get_session] = lambda: session
     # await session.rollback()
     await session.close()
+
+
+app.dependency_overrides[get_session] = lambda: test_get_session
 
 
 @pytest.fixture(scope="session")
@@ -55,14 +58,14 @@ def event_loop():
 
 from core.database import RoutingSession
 @pytest.fixture(scope='function')
-async def async_client(test_get_session) -> AsyncClient:
+async def async_client() -> AsyncClient:
     app.dependency_overrides[get_session] = lambda: test_get_session
     async with AsyncClient(app=app, base_url="http://127.0.0.1:8800") as client, LifespanManager(app):
         yield client
 
 
 @pytest.fixture
-async def fake_data(test_get_session):
+async def fake_data():
     async for s in test_get_session():
         session = s
     user = UserAccount(

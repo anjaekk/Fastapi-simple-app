@@ -10,7 +10,7 @@ env = load_dotenv()
 db_for_write = getenv('WRITE_DB_URL')
 db_for_read = getenv('READ_DB_URL')
 db_for_test = getenv('TEST_DB_URL')
-test = getenv('TEST')
+
 
 engines = {
     'write': create_async_engine(db_for_write),
@@ -20,14 +20,11 @@ engines = {
 
 class RoutingSession(Session):
     def get_bind(self, mapper=None, clause=None, **kwargs):
-        print(test)
-        if test == False:
-            if self._flushing or isinstance(clause, (Update, Delete, Insert)):
-                return engines['write'].sync_engine
-            else:
-                return engines['read'].sync_engine
+        if self._flushing or isinstance(clause, (Update, Delete, Insert)):
+            return engines['write'].sync_engine
         else:
-           return engines['test'].sync_engine
+            return engines['read'].sync_engine
+
 
 
 async def get_session() -> AsyncSession:
