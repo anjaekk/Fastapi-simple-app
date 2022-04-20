@@ -21,8 +21,6 @@ async def test_create_user(async_client: AsyncClient):
     """
     res = await async_client.post('/graphql',json={'query': query})
     result = res.json()
-    print(result)
-    print("************")
     assert result['data']['createUser']['user']['name'] == 'test'
 
 
@@ -62,8 +60,6 @@ async def test_create_token_invalid_account(async_client: AsyncClient):
     """
     res = await async_client.post('/graphql',json={'query': query})
     result = res.json()
-    print(result)
-    print("**********")
     fake_token = create_access_token(1)
     assert result['data']['createToken'] is None
     assert result['errors'][0]['message'] == 'Wrong password.'

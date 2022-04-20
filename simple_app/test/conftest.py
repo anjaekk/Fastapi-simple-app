@@ -45,8 +45,7 @@ async def test_get_session(connection):
     app.dependency_overrides[get_session] = lambda: session
     # await session.rollback()
     await session.close()
-
-
+    
 app.dependency_overrides[get_session] = lambda: test_get_session
 
 
@@ -56,7 +55,7 @@ def event_loop():
     yield loop
     loop.close()
 
-from core.database import RoutingSession
+
 @pytest.fixture(scope='function')
 async def async_client() -> AsyncClient:
     app.dependency_overrides[get_session] = lambda: test_get_session

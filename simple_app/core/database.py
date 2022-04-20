@@ -11,12 +11,12 @@ db_for_write = getenv('WRITE_DB_URL')
 db_for_read = getenv('READ_DB_URL')
 db_for_test = getenv('TEST_DB_URL')
 
-
 engines = {
     'write': create_async_engine(db_for_write),
     'read': create_async_engine(db_for_read),
     'test': create_async_engine(db_for_test),
 }
+
 
 class RoutingSession(Session):
     def get_bind(self, mapper=None, clause=None, **kwargs):
@@ -24,7 +24,6 @@ class RoutingSession(Session):
             return engines['write'].sync_engine
         else:
             return engines['read'].sync_engine
-
 
 
 async def get_session() -> AsyncSession:
@@ -38,7 +37,6 @@ async def get_session() -> AsyncSession:
         await session.close()
         
 
-
 async def create_table():
     async with engines['write'].begin() as conn:
         #await conn.run_sync(SQLModel.metadata.drop_all)
@@ -48,6 +46,7 @@ async def create_table():
 async def connection_dispose():
     for engine in engines.values():
         await engine.dispose()
+
 
 async def remove(self):
     if self.registry.has(): 

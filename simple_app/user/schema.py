@@ -8,8 +8,7 @@ from .serializers import UserAccount, CreateUserInput, UserType
 from .auth import create_access_token
 
 PW_CONTEXT = CryptContext(schemes=['bcrypt'], deprecated='auto')
-
-session = get_session()
+db = get_session
 
 class CreateUser(graphene.Mutation):
     user = graphene.Field(UserType, description='A user instance.')
@@ -24,8 +23,8 @@ class CreateUser(graphene.Mutation):
 
     @staticmethod
     async def mutate(root, info, input_data):
-        async for s in get_session():
-            session = s
+        async for ssess in db():
+            session = ssess
         exist_email = (
             await session.execute(
                 select(UserAccount).where(UserAccount.email == input_data['email'] and user.is_active == True)
@@ -38,9 +37,7 @@ class CreateUser(graphene.Mutation):
         input_data['password'] = PW_CONTEXT.hash(input_data['password'])
         user=UserAccount(**input_data)
         session.add(user)
-        print("커밋전")
         await session.commit()
-        print("커밋후")
         return CreateUser(user=user)
 
 
@@ -59,8 +56,8 @@ class CreateToken(graphene.Mutation):
 
     @staticmethod
     async def mutate(root, info, email, password):
-        async for s in get_session():
-            session = s
+        async for ssess in db():
+            session = ssess
         user = (
             await session.execute(
                 select(UserAccount).where(UserAccount.email == email)
@@ -87,7 +84,7 @@ class Query(graphene.ObjectType):
     
     @staticmethod
     async def resolve_user_list(root, info):
-        async for s in get_session():
-            session = s
+        async for ssess in db():
+            session = ssess
         result = await session.execute(select(UserAccount))
         return result.scalars().all()
